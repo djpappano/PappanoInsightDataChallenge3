@@ -2,48 +2,44 @@
 library(readr)
 library(dplyr)
 library(tidyr)
-library(lubridate)
 library(ggplot2)
 
-##read in raw data from .csv
-dir()
+##What sorts of actionable insights can we draw from this data set?
+##First I need to figure out what these fields mean by plotting them
+##This will help me identify variables
+
+##read in raw data from .csv; only take random sampling of data
+set.seed(33)
 raw_data<-read_csv("supermarket_data_aggr.csv") %>%
-  filter(complete.cases(.))
+  filter(complete.cases(.)) %>%
+  sample_n(size=10000) %>%
+  mutate(customer_id=as.character(customer_id))
 
-##going to try to replicate original tables
-##i'm making the assumign that "shops_used" is a unique identify of one of five shops
-##this is based on other columns in the raw data and appearance that other parameters may correspond to 1-5
-supermarket_distances<-raw_data %>%
-  select(customer_id,shops_used,distance_shop_1:distance_shop_5) %>%
-  distinct(.) %>%
-  gather(key=junk,value=distance,distance_shop_1:distance_shop_5) %>%
-  distinct(.) %>%
-  select(-junk) %>%
-  mutate(customer_id=as.character(customer_id)) %>%
-  mutate(shops_used=as.character(shops_used))
+##figure out what ambiguous variables mean by plotting
 
-##distance of average consumer to each shop
-distance_fig<-supermarket_distances %>%
-  mutate(shops_used=as.character(shops_used)) %>%
-  select(shops_used,distance) %>%
-  ggplot() +
-  geom_histogram(aes(x=distance,fill=shops_used),colour='black') +
-  geom_vline(xintercept=mean(supermarket_distances$distance)) +
-  theme_grey(base_size=18) +
-  facet_wrap(~shops_used)
+##products_purchased v amount_purchased
+corr_fig1<-raw_data %>%
+  ggplot()+
+  geom_point(aes(x=products_purchased,amount_purchased),colour="dodgerblue4") +
+  theme_grey(base_size = 18)
+corr_fig1
 
-##violin plot of customer distance to each shop  
-distance_fig
+##also here
+corr_fig2<-raw_data %>%
+  ggplot()+
+  geom_point(aes(x=unique_products_purchased,products_purchased),colour="coral") +
+  theme_grey(base_size = 18)
+corr_fig2
+##looks like unique products purchased is a count, not some ID
 
-summary_distances<-supermarket_distances %>%
-  mutate(shops_used=as.character(shops_used)) %>%
-  group_by(shops_used) %>%
-  summarize(count=n(),
-            mean_dist=mean(distance),
-            sd_dist=sd(distance))
-View(summary_distances)
-
-
+##plot a bunch of histograms of data
+hist_figs<-raw_data %>%
+  select(distance_shop_1:avg_price_shop_5) %>%
+  gather(key=item,value=number,distance_shop_1:avg_price_shop_5) %>%
+  ggplot()+
+  geom_histogram(aes(x=number,fill=item),colour="black",show.legend = FALSE)+
+  facet_wrap(~item)
+hist_figs
 
 
 
