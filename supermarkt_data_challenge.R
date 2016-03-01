@@ -42,6 +42,16 @@ hist_figs<-raw_data %>%
 hist_figs
 
 
+topten_1<-raw_data %>%
+  mutate(scaled_amount=scale(amount_purchased_shop_1)) %>%
+  filter(scaled_amount>0.90)
+
+##figures of top ten percent
+cor_fig_topten1<-topten_1%>%
+  ggplot()+
+  geom_point(aes(x=products_purchased_shop_1,y=amount_purchased_shop_1))+
+  theme_grey(base_size = 18)
+cor_fig_topten1
 
 
 
